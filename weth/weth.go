@@ -4,32 +4,39 @@
 package weth
 
 import (
-	"fmt"
+	"errors"
 	"math/big"
-	"reflect"
 	"strings"
 
-	ethereum "github.com/ledgerwatch/erigon"
-	libcommon "github.com/ledgerwatch/erigon-lib/common"
-	"github.com/ledgerwatch/erigon/accounts/abi"
-	"github.com/ledgerwatch/erigon/accounts/abi/bind"
-	"github.com/ledgerwatch/erigon/core/types"
-	"github.com/ledgerwatch/erigon/event"
+	ethereum "github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var (
+	_ = errors.New
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
 	_ = bind.Bind
-	_ = libcommon.Big1
+	_ = common.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
+	_ = abi.ConvertType
 )
 
+// WethMetaData contains all meta data concerning the Weth contract.
+var WethMetaData = &bind.MetaData{
+	ABI: "[{\"constant\":true,\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"guy\",\"type\":\"address\"},{\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"src\",\"type\":\"address\"},{\"name\":\"dst\",\"type\":\"address\"},{\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"dst\",\"type\":\"address\"},{\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"deposit\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"},{\"name\":\"\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"src\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"guy\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"src\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"dst\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"dst\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"Deposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"src\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"Withdrawal\",\"type\":\"event\"}]",
+}
+
 // WethABI is the input ABI used to generate the binding from.
-const WethABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"guy\",\"type\":\"address\"},{\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"src\",\"type\":\"address\"},{\"name\":\"dst\",\"type\":\"address\"},{\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"withdraw\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"dst\",\"type\":\"address\"},{\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"deposit\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"},{\"name\":\"\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"src\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"guy\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"src\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"dst\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"dst\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"Deposit\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"src\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"wad\",\"type\":\"uint256\"}],\"name\":\"Withdrawal\",\"type\":\"event\"}]"
+// Deprecated: Use WethMetaData.ABI instead.
+var WethABI = WethMetaData.ABI
 
 // Weth is an auto generated Go binding around an Ethereum contract.
 type Weth struct {
@@ -91,7 +98,7 @@ type WethTransactorRaw struct {
 }
 
 // NewWeth creates a new instance of Weth, bound to a specific deployed contract.
-func NewWeth(address libcommon.Address, backend bind.ContractBackend) (*Weth, error) {
+func NewWeth(address common.Address, backend bind.ContractBackend) (*Weth, error) {
 	contract, err := bindWeth(address, backend, backend, backend)
 	if err != nil {
 		return nil, err
@@ -100,7 +107,7 @@ func NewWeth(address libcommon.Address, backend bind.ContractBackend) (*Weth, er
 }
 
 // NewWethCaller creates a new read-only instance of Weth, bound to a specific deployed contract.
-func NewWethCaller(address libcommon.Address, caller bind.ContractCaller) (*WethCaller, error) {
+func NewWethCaller(address common.Address, caller bind.ContractCaller) (*WethCaller, error) {
 	contract, err := bindWeth(address, caller, nil, nil)
 	if err != nil {
 		return nil, err
@@ -109,7 +116,7 @@ func NewWethCaller(address libcommon.Address, caller bind.ContractCaller) (*Weth
 }
 
 // NewWethTransactor creates a new write-only instance of Weth, bound to a specific deployed contract.
-func NewWethTransactor(address libcommon.Address, transactor bind.ContractTransactor) (*WethTransactor, error) {
+func NewWethTransactor(address common.Address, transactor bind.ContractTransactor) (*WethTransactor, error) {
 	contract, err := bindWeth(address, nil, transactor, nil)
 	if err != nil {
 		return nil, err
@@ -118,7 +125,7 @@ func NewWethTransactor(address libcommon.Address, transactor bind.ContractTransa
 }
 
 // NewWethFilterer creates a new log filterer instance of Weth, bound to a specific deployed contract.
-func NewWethFilterer(address libcommon.Address, filterer bind.ContractFilterer) (*WethFilterer, error) {
+func NewWethFilterer(address common.Address, filterer bind.ContractFilterer) (*WethFilterer, error) {
 	contract, err := bindWeth(address, nil, nil, filterer)
 	if err != nil {
 		return nil, err
@@ -127,12 +134,12 @@ func NewWethFilterer(address libcommon.Address, filterer bind.ContractFilterer) 
 }
 
 // bindWeth binds a generic wrapper to an already deployed contract.
-func bindWeth(address libcommon.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(WethABI))
+func bindWeth(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := WethMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and
@@ -145,12 +152,12 @@ func (_Weth *WethRaw) Call(opts *bind.CallOpts, result *[]interface{}, method st
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_Weth *WethRaw) Transfer(opts *bind.TransactOpts) (types.Transaction, error) {
+func (_Weth *WethRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Weth.Contract.WethTransactor.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_Weth *WethRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (types.Transaction, error) {
+func (_Weth *WethRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _Weth.Contract.WethTransactor.contract.Transact(opts, method, params...)
 }
 
@@ -164,19 +171,19 @@ func (_Weth *WethCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, met
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_Weth *WethTransactorRaw) Transfer(opts *bind.TransactOpts) (types.Transaction, error) {
+func (_Weth *WethTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Weth.Contract.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_Weth *WethTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (types.Transaction, error) {
+func (_Weth *WethTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _Weth.Contract.contract.Transact(opts, method, params...)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
 // Solidity: function allowance(address , address ) view returns(uint256)
-func (_Weth *WethCaller) Allowance(opts *bind.CallOpts, arg0 libcommon.Address, arg1 libcommon.Address) (*big.Int, error) {
+func (_Weth *WethCaller) Allowance(opts *bind.CallOpts, arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	var out []interface{}
 	err := _Weth.contract.Call(opts, &out, "allowance", arg0, arg1)
 
@@ -193,21 +200,21 @@ func (_Weth *WethCaller) Allowance(opts *bind.CallOpts, arg0 libcommon.Address, 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
 // Solidity: function allowance(address , address ) view returns(uint256)
-func (_Weth *WethSession) Allowance(arg0 libcommon.Address, arg1 libcommon.Address) (*big.Int, error) {
+func (_Weth *WethSession) Allowance(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	return _Weth.Contract.Allowance(&_Weth.CallOpts, arg0, arg1)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
 // Solidity: function allowance(address , address ) view returns(uint256)
-func (_Weth *WethCallerSession) Allowance(arg0 libcommon.Address, arg1 libcommon.Address) (*big.Int, error) {
+func (_Weth *WethCallerSession) Allowance(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	return _Weth.Contract.Allowance(&_Weth.CallOpts, arg0, arg1)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address ) view returns(uint256)
-func (_Weth *WethCaller) BalanceOf(opts *bind.CallOpts, arg0 libcommon.Address) (*big.Int, error) {
+func (_Weth *WethCaller) BalanceOf(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
 	var out []interface{}
 	err := _Weth.contract.Call(opts, &out, "balanceOf", arg0)
 
@@ -224,14 +231,14 @@ func (_Weth *WethCaller) BalanceOf(opts *bind.CallOpts, arg0 libcommon.Address) 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address ) view returns(uint256)
-func (_Weth *WethSession) BalanceOf(arg0 libcommon.Address) (*big.Int, error) {
+func (_Weth *WethSession) BalanceOf(arg0 common.Address) (*big.Int, error) {
 	return _Weth.Contract.BalanceOf(&_Weth.CallOpts, arg0)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address ) view returns(uint256)
-func (_Weth *WethCallerSession) BalanceOf(arg0 libcommon.Address) (*big.Int, error) {
+func (_Weth *WethCallerSession) BalanceOf(arg0 common.Address) (*big.Int, error) {
 	return _Weth.Contract.BalanceOf(&_Weth.CallOpts, arg0)
 }
 
@@ -362,282 +369,126 @@ func (_Weth *WethCallerSession) TotalSupply() (*big.Int, error) {
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address guy, uint256 wad) returns(bool)
-func (_Weth *WethTransactor) Approve(opts *bind.TransactOpts, guy libcommon.Address, wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethTransactor) Approve(opts *bind.TransactOpts, guy common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _Weth.contract.Transact(opts, "approve", guy, wad)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address guy, uint256 wad) returns(bool)
-func (_Weth *WethSession) Approve(guy libcommon.Address, wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethSession) Approve(guy common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _Weth.Contract.Approve(&_Weth.TransactOpts, guy, wad)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address guy, uint256 wad) returns(bool)
-func (_Weth *WethTransactorSession) Approve(guy libcommon.Address, wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethTransactorSession) Approve(guy common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _Weth.Contract.Approve(&_Weth.TransactOpts, guy, wad)
 }
 
 // Deposit is a paid mutator transaction binding the contract method 0xd0e30db0.
 //
 // Solidity: function deposit() payable returns()
-func (_Weth *WethTransactor) Deposit(opts *bind.TransactOpts) (types.Transaction, error) {
+func (_Weth *WethTransactor) Deposit(opts *bind.TransactOpts) (*types.Transaction, error) {
 	return _Weth.contract.Transact(opts, "deposit")
 }
 
 // Deposit is a paid mutator transaction binding the contract method 0xd0e30db0.
 //
 // Solidity: function deposit() payable returns()
-func (_Weth *WethSession) Deposit() (types.Transaction, error) {
+func (_Weth *WethSession) Deposit() (*types.Transaction, error) {
 	return _Weth.Contract.Deposit(&_Weth.TransactOpts)
 }
 
 // Deposit is a paid mutator transaction binding the contract method 0xd0e30db0.
 //
 // Solidity: function deposit() payable returns()
-func (_Weth *WethTransactorSession) Deposit() (types.Transaction, error) {
+func (_Weth *WethTransactorSession) Deposit() (*types.Transaction, error) {
 	return _Weth.Contract.Deposit(&_Weth.TransactOpts)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
 // Solidity: function transfer(address dst, uint256 wad) returns(bool)
-func (_Weth *WethTransactor) Transfer(opts *bind.TransactOpts, dst libcommon.Address, wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethTransactor) Transfer(opts *bind.TransactOpts, dst common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _Weth.contract.Transact(opts, "transfer", dst, wad)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
 // Solidity: function transfer(address dst, uint256 wad) returns(bool)
-func (_Weth *WethSession) Transfer(dst libcommon.Address, wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethSession) Transfer(dst common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _Weth.Contract.Transfer(&_Weth.TransactOpts, dst, wad)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
 // Solidity: function transfer(address dst, uint256 wad) returns(bool)
-func (_Weth *WethTransactorSession) Transfer(dst libcommon.Address, wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethTransactorSession) Transfer(dst common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _Weth.Contract.Transfer(&_Weth.TransactOpts, dst, wad)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address src, address dst, uint256 wad) returns(bool)
-func (_Weth *WethTransactor) TransferFrom(opts *bind.TransactOpts, src libcommon.Address, dst libcommon.Address, wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethTransactor) TransferFrom(opts *bind.TransactOpts, src common.Address, dst common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _Weth.contract.Transact(opts, "transferFrom", src, dst, wad)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address src, address dst, uint256 wad) returns(bool)
-func (_Weth *WethSession) TransferFrom(src libcommon.Address, dst libcommon.Address, wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethSession) TransferFrom(src common.Address, dst common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _Weth.Contract.TransferFrom(&_Weth.TransactOpts, src, dst, wad)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address src, address dst, uint256 wad) returns(bool)
-func (_Weth *WethTransactorSession) TransferFrom(src libcommon.Address, dst libcommon.Address, wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethTransactorSession) TransferFrom(src common.Address, dst common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _Weth.Contract.TransferFrom(&_Weth.TransactOpts, src, dst, wad)
 }
 
 // Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
 //
 // Solidity: function withdraw(uint256 wad) returns()
-func (_Weth *WethTransactor) Withdraw(opts *bind.TransactOpts, wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethTransactor) Withdraw(opts *bind.TransactOpts, wad *big.Int) (*types.Transaction, error) {
 	return _Weth.contract.Transact(opts, "withdraw", wad)
 }
 
 // Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
 //
 // Solidity: function withdraw(uint256 wad) returns()
-func (_Weth *WethSession) Withdraw(wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethSession) Withdraw(wad *big.Int) (*types.Transaction, error) {
 	return _Weth.Contract.Withdraw(&_Weth.TransactOpts, wad)
 }
 
 // Withdraw is a paid mutator transaction binding the contract method 0x2e1a7d4d.
 //
 // Solidity: function withdraw(uint256 wad) returns()
-func (_Weth *WethTransactorSession) Withdraw(wad *big.Int) (types.Transaction, error) {
+func (_Weth *WethTransactorSession) Withdraw(wad *big.Int) (*types.Transaction, error) {
 	return _Weth.Contract.Withdraw(&_Weth.TransactOpts, wad)
-}
-
-// ApproveParams is an auto generated read-only Go binding of transcaction calldata params
-type ApproveParams struct {
-	Param_guy libcommon.Address
-	Param_wad *big.Int
-}
-
-// Parse Approve method from calldata of a transaction
-//
-// Solidity: function approve(address guy, uint256 wad) returns(bool)
-func ParseApprove(calldata []byte) (*ApproveParams, error) {
-	if len(calldata) <= 4 {
-		return nil, fmt.Errorf("invalid calldata input")
-	}
-
-	_abi, err := abi.JSON(strings.NewReader(WethABI))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
-	}
-
-	out, err := _abi.Methods["approve"].Inputs.Unpack(calldata[4:])
-	if err != nil {
-		return nil, fmt.Errorf("failed to unpack approve params data: %w", err)
-	}
-
-	var paramsResult = new(ApproveParams)
-	value := reflect.ValueOf(paramsResult).Elem()
-
-	if value.NumField() != len(out) {
-		return nil, fmt.Errorf("failed to match calldata with param field number")
-	}
-
-	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
-	out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
-
-	return &ApproveParams{
-		Param_guy: out0, Param_wad: out1,
-	}, nil
-}
-
-// TransferParams is an auto generated read-only Go binding of transcaction calldata params
-type TransferParams struct {
-	Param_dst libcommon.Address
-	Param_wad *big.Int
-}
-
-// Parse Transfer method from calldata of a transaction
-//
-// Solidity: function transfer(address dst, uint256 wad) returns(bool)
-func ParseTransfer(calldata []byte) (*TransferParams, error) {
-	if len(calldata) <= 4 {
-		return nil, fmt.Errorf("invalid calldata input")
-	}
-
-	_abi, err := abi.JSON(strings.NewReader(WethABI))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
-	}
-
-	out, err := _abi.Methods["transfer"].Inputs.Unpack(calldata[4:])
-	if err != nil {
-		return nil, fmt.Errorf("failed to unpack transfer params data: %w", err)
-	}
-
-	var paramsResult = new(TransferParams)
-	value := reflect.ValueOf(paramsResult).Elem()
-
-	if value.NumField() != len(out) {
-		return nil, fmt.Errorf("failed to match calldata with param field number")
-	}
-
-	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
-	out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
-
-	return &TransferParams{
-		Param_dst: out0, Param_wad: out1,
-	}, nil
-}
-
-// TransferFromParams is an auto generated read-only Go binding of transcaction calldata params
-type TransferFromParams struct {
-	Param_src libcommon.Address
-	Param_dst libcommon.Address
-	Param_wad *big.Int
-}
-
-// Parse TransferFrom method from calldata of a transaction
-//
-// Solidity: function transferFrom(address src, address dst, uint256 wad) returns(bool)
-func ParseTransferFrom(calldata []byte) (*TransferFromParams, error) {
-	if len(calldata) <= 4 {
-		return nil, fmt.Errorf("invalid calldata input")
-	}
-
-	_abi, err := abi.JSON(strings.NewReader(WethABI))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
-	}
-
-	out, err := _abi.Methods["transferFrom"].Inputs.Unpack(calldata[4:])
-	if err != nil {
-		return nil, fmt.Errorf("failed to unpack transferFrom params data: %w", err)
-	}
-
-	var paramsResult = new(TransferFromParams)
-	value := reflect.ValueOf(paramsResult).Elem()
-
-	if value.NumField() != len(out) {
-		return nil, fmt.Errorf("failed to match calldata with param field number")
-	}
-
-	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
-	out1 := *abi.ConvertType(out[1], new(libcommon.Address)).(*libcommon.Address)
-	out2 := *abi.ConvertType(out[2], new(*big.Int)).(**big.Int)
-
-	return &TransferFromParams{
-		Param_src: out0, Param_dst: out1, Param_wad: out2,
-	}, nil
-}
-
-// WithdrawParams is an auto generated read-only Go binding of transcaction calldata params
-type WithdrawParams struct {
-	Param_wad *big.Int
-}
-
-// Parse Withdraw method from calldata of a transaction
-//
-// Solidity: function withdraw(uint256 wad) returns()
-func ParseWithdraw(calldata []byte) (*WithdrawParams, error) {
-	if len(calldata) <= 4 {
-		return nil, fmt.Errorf("invalid calldata input")
-	}
-
-	_abi, err := abi.JSON(strings.NewReader(WethABI))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
-	}
-
-	out, err := _abi.Methods["withdraw"].Inputs.Unpack(calldata[4:])
-	if err != nil {
-		return nil, fmt.Errorf("failed to unpack withdraw params data: %w", err)
-	}
-
-	var paramsResult = new(WithdrawParams)
-	value := reflect.ValueOf(paramsResult).Elem()
-
-	if value.NumField() != len(out) {
-		return nil, fmt.Errorf("failed to match calldata with param field number")
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return &WithdrawParams{
-		Param_wad: out0,
-	}, nil
 }
 
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
-func (_Weth *WethTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (types.Transaction, error) {
+func (_Weth *WethTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
 	return _Weth.contract.RawTransact(opts, calldata)
 }
 
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
-func (_Weth *WethSession) Fallback(calldata []byte) (types.Transaction, error) {
+func (_Weth *WethSession) Fallback(calldata []byte) (*types.Transaction, error) {
 	return _Weth.Contract.Fallback(&_Weth.TransactOpts, calldata)
 }
 
 // Fallback is a paid mutator transaction binding the contract fallback function.
 //
 // Solidity: fallback() payable returns()
-func (_Weth *WethTransactorSession) Fallback(calldata []byte) (types.Transaction, error) {
+func (_Weth *WethTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
 	return _Weth.Contract.Fallback(&_Weth.TransactOpts, calldata)
 }
 
@@ -710,8 +561,8 @@ func (it *WethApprovalIterator) Close() error {
 
 // WethApproval represents a Approval event raised by the Weth contract.
 type WethApproval struct {
-	Src libcommon.Address
-	Guy libcommon.Address
+	Src common.Address
+	Guy common.Address
 	Wad *big.Int
 	Raw types.Log // Blockchain specific contextual infos
 }
@@ -719,7 +570,7 @@ type WethApproval struct {
 // FilterApproval is a free log retrieval operation binding the contract event 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925.
 //
 // Solidity: event Approval(address indexed src, address indexed guy, uint256 wad)
-func (_Weth *WethFilterer) FilterApproval(opts *bind.FilterOpts, src []libcommon.Address, guy []libcommon.Address) (*WethApprovalIterator, error) {
+func (_Weth *WethFilterer) FilterApproval(opts *bind.FilterOpts, src []common.Address, guy []common.Address) (*WethApprovalIterator, error) {
 
 	var srcRule []interface{}
 	for _, srcItem := range src {
@@ -740,7 +591,7 @@ func (_Weth *WethFilterer) FilterApproval(opts *bind.FilterOpts, src []libcommon
 // WatchApproval is a free log subscription operation binding the contract event 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925.
 //
 // Solidity: event Approval(address indexed src, address indexed guy, uint256 wad)
-func (_Weth *WethFilterer) WatchApproval(opts *bind.WatchOpts, sink chan<- *WethApproval, src []libcommon.Address, guy []libcommon.Address) (event.Subscription, error) {
+func (_Weth *WethFilterer) WatchApproval(opts *bind.WatchOpts, sink chan<- *WethApproval, src []common.Address, guy []common.Address) (event.Subscription, error) {
 
 	var srcRule []interface{}
 	for _, srcItem := range src {
@@ -864,7 +715,7 @@ func (it *WethDepositIterator) Close() error {
 
 // WethDeposit represents a Deposit event raised by the Weth contract.
 type WethDeposit struct {
-	Dst libcommon.Address
+	Dst common.Address
 	Wad *big.Int
 	Raw types.Log // Blockchain specific contextual infos
 }
@@ -872,7 +723,7 @@ type WethDeposit struct {
 // FilterDeposit is a free log retrieval operation binding the contract event 0xe1fffcc4923d04b559f4d29a8bfc6cda04eb5b0d3c460751c2402c5c5cc9109c.
 //
 // Solidity: event Deposit(address indexed dst, uint256 wad)
-func (_Weth *WethFilterer) FilterDeposit(opts *bind.FilterOpts, dst []libcommon.Address) (*WethDepositIterator, error) {
+func (_Weth *WethFilterer) FilterDeposit(opts *bind.FilterOpts, dst []common.Address) (*WethDepositIterator, error) {
 
 	var dstRule []interface{}
 	for _, dstItem := range dst {
@@ -889,7 +740,7 @@ func (_Weth *WethFilterer) FilterDeposit(opts *bind.FilterOpts, dst []libcommon.
 // WatchDeposit is a free log subscription operation binding the contract event 0xe1fffcc4923d04b559f4d29a8bfc6cda04eb5b0d3c460751c2402c5c5cc9109c.
 //
 // Solidity: event Deposit(address indexed dst, uint256 wad)
-func (_Weth *WethFilterer) WatchDeposit(opts *bind.WatchOpts, sink chan<- *WethDeposit, dst []libcommon.Address) (event.Subscription, error) {
+func (_Weth *WethFilterer) WatchDeposit(opts *bind.WatchOpts, sink chan<- *WethDeposit, dst []common.Address) (event.Subscription, error) {
 
 	var dstRule []interface{}
 	for _, dstItem := range dst {
@@ -1009,8 +860,8 @@ func (it *WethTransferIterator) Close() error {
 
 // WethTransfer represents a Transfer event raised by the Weth contract.
 type WethTransfer struct {
-	Src libcommon.Address
-	Dst libcommon.Address
+	Src common.Address
+	Dst common.Address
 	Wad *big.Int
 	Raw types.Log // Blockchain specific contextual infos
 }
@@ -1018,7 +869,7 @@ type WethTransfer struct {
 // FilterTransfer is a free log retrieval operation binding the contract event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef.
 //
 // Solidity: event Transfer(address indexed src, address indexed dst, uint256 wad)
-func (_Weth *WethFilterer) FilterTransfer(opts *bind.FilterOpts, src []libcommon.Address, dst []libcommon.Address) (*WethTransferIterator, error) {
+func (_Weth *WethFilterer) FilterTransfer(opts *bind.FilterOpts, src []common.Address, dst []common.Address) (*WethTransferIterator, error) {
 
 	var srcRule []interface{}
 	for _, srcItem := range src {
@@ -1039,7 +890,7 @@ func (_Weth *WethFilterer) FilterTransfer(opts *bind.FilterOpts, src []libcommon
 // WatchTransfer is a free log subscription operation binding the contract event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef.
 //
 // Solidity: event Transfer(address indexed src, address indexed dst, uint256 wad)
-func (_Weth *WethFilterer) WatchTransfer(opts *bind.WatchOpts, sink chan<- *WethTransfer, src []libcommon.Address, dst []libcommon.Address) (event.Subscription, error) {
+func (_Weth *WethFilterer) WatchTransfer(opts *bind.WatchOpts, sink chan<- *WethTransfer, src []common.Address, dst []common.Address) (event.Subscription, error) {
 
 	var srcRule []interface{}
 	for _, srcItem := range src {
@@ -1163,7 +1014,7 @@ func (it *WethWithdrawalIterator) Close() error {
 
 // WethWithdrawal represents a Withdrawal event raised by the Weth contract.
 type WethWithdrawal struct {
-	Src libcommon.Address
+	Src common.Address
 	Wad *big.Int
 	Raw types.Log // Blockchain specific contextual infos
 }
@@ -1171,7 +1022,7 @@ type WethWithdrawal struct {
 // FilterWithdrawal is a free log retrieval operation binding the contract event 0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65.
 //
 // Solidity: event Withdrawal(address indexed src, uint256 wad)
-func (_Weth *WethFilterer) FilterWithdrawal(opts *bind.FilterOpts, src []libcommon.Address) (*WethWithdrawalIterator, error) {
+func (_Weth *WethFilterer) FilterWithdrawal(opts *bind.FilterOpts, src []common.Address) (*WethWithdrawalIterator, error) {
 
 	var srcRule []interface{}
 	for _, srcItem := range src {
@@ -1188,7 +1039,7 @@ func (_Weth *WethFilterer) FilterWithdrawal(opts *bind.FilterOpts, src []libcomm
 // WatchWithdrawal is a free log subscription operation binding the contract event 0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65.
 //
 // Solidity: event Withdrawal(address indexed src, uint256 wad)
-func (_Weth *WethFilterer) WatchWithdrawal(opts *bind.WatchOpts, sink chan<- *WethWithdrawal, src []libcommon.Address) (event.Subscription, error) {
+func (_Weth *WethFilterer) WatchWithdrawal(opts *bind.WatchOpts, sink chan<- *WethWithdrawal, src []common.Address) (event.Subscription, error) {
 
 	var srcRule []interface{}
 	for _, srcItem := range src {

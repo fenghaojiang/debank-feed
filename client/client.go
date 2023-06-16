@@ -4,14 +4,19 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/fenghaojiang/debank-feed/erc20"
 	"github.com/fenghaojiang/debank-feed/erc721"
 	"github.com/fenghaojiang/debank-feed/weth"
-	erigonCommon "github.com/ledgerwatch/erigon-lib/common"
-	"github.com/ledgerwatch/erigon/eth/filters"
 )
+
+type Query struct {
+	LogCount          uint64 `json:"logCount,omitempty"`
+	IgnoreTopicsOrder bool   `json:"ignoreTopicsOrder,omitempty"`
+}
 
 type Client struct {
 	client       *rpc.Client
@@ -25,9 +30,9 @@ func NewClient(ctx context.Context, endpoint string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	erc20filter, _ := erc20.NewERC20Filterer(erigonCommon.HexToAddress(""), nil)
-	erc721filter, _ := erc721.NewERC721Filterer(erigonCommon.HexToAddress(""), nil)
-	wethfilter, _ := weth.NewWethFilterer(erigonCommon.HexToAddress(""), nil)
+	erc20filter, _ := erc20.NewERC20Filterer(common.HexToAddress(""), nil)
+	erc721filter, _ := erc721.NewERC721Filterer(common.HexToAddress(""), nil)
+	wethfilter, _ := weth.NewWethFilterer(common.HexToAddress(""), nil)
 
 	return &Client{
 		client:       c,
@@ -37,12 +42,12 @@ func NewClient(ctx context.Context, endpoint string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) DebankFeed(ctx context.Context, endBlockCursor *big.Int, accountAddress erigonCommon.Address) ([]types.Log, error) {
+func (c *Client) DebankFeed(ctx context.Context, endBlockCursor *big.Int, accountAddress common.Address) ([]types.Log, error) {
 	var logs []types.Log
 
-	query := filters.FilterCriteria{
+	query := ethereum.FilterQuery{
 		FromBlock: new(big.Int).SetUint64(0),
-		Topics: [][]erigonCommon.Hash{
+		Topics: [][]common.Hash{
 			{
 				accountAddress.Hash(),
 			},
@@ -53,7 +58,7 @@ func (c *Client) DebankFeed(ctx context.Context, endBlockCursor *big.Int, accoun
 		query.ToBlock = endBlockCursor
 	}
 
-	err := c.client.CallContext(ctx, &logs, "erigon_getLatestLogs", query, filters.LogFilterOptions{
+	err := c.client.CallContext(ctx, &logs, "erigon_getLatestLogs", query, Query{
 		LogCount:          20,
 		IgnoreTopicsOrder: true,
 	})
