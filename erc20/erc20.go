@@ -4,39 +4,32 @@
 package erc20
 
 import (
-	"errors"
+	"fmt"
 	"math/big"
+	"reflect"
 	"strings"
 
-	ethereum "github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/event"
+	ethereum "github.com/ledgerwatch/erigon"
+	libcommon "github.com/ledgerwatch/erigon-lib/common"
+	"github.com/ledgerwatch/erigon/accounts/abi"
+	"github.com/ledgerwatch/erigon/accounts/abi/bind"
+	"github.com/ledgerwatch/erigon/core/types"
+	"github.com/ledgerwatch/erigon/event"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var (
-	_ = errors.New
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
 	_ = bind.Bind
-	_ = common.Big1
+	_ = libcommon.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
-	_ = abi.ConvertType
 )
 
-// ERC20MetaData contains all meta data concerning the ERC20 contract.
-var ERC20MetaData = &bind.MetaData{
-	ABI: "[{\"constant\":true,\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_upgradedAddress\",\"type\":\"address\"}],\"name\":\"deprecate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_spender\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"deprecated\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_evilUser\",\"type\":\"address\"}],\"name\":\"addBlackList\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_from\",\"type\":\"address\"},{\"name\":\"_to\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"upgradedAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"balances\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maximumFee\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_maker\",\"type\":\"address\"}],\"name\":\"getBlackListStatus\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"},{\"name\":\"\",\"type\":\"address\"}],\"name\":\"allowed\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"paused\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"who\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getOwner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_to\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newBasisPoints\",\"type\":\"uint256\"},{\"name\":\"newMaxFee\",\"type\":\"uint256\"}],\"name\":\"setParams\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"issue\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"redeem\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_owner\",\"type\":\"address\"},{\"name\":\"_spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"name\":\"remaining\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"basisPointsRate\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"isBlackListed\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_clearedUser\",\"type\":\"address\"}],\"name\":\"removeBlackList\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"MAX_UINT\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_blackListedUser\",\"type\":\"address\"}],\"name\":\"destroyBlackFunds\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_initialSupply\",\"type\":\"uint256\"},{\"name\":\"_name\",\"type\":\"string\"},{\"name\":\"_symbol\",\"type\":\"string\"},{\"name\":\"_decimals\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Issue\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Redeem\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"Deprecate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"feeBasisPoints\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"maxFee\",\"type\":\"uint256\"}],\"name\":\"Params\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_blackListedUser\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_balance\",\"type\":\"uint256\"}],\"name\":\"DestroyedBlackFunds\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"AddedBlackList\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"RemovedBlackList\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"Pause\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"Unpause\",\"type\":\"event\"}]",
-}
-
 // ERC20ABI is the input ABI used to generate the binding from.
-// Deprecated: Use ERC20MetaData.ABI instead.
-var ERC20ABI = ERC20MetaData.ABI
+const ERC20ABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_upgradedAddress\",\"type\":\"address\"}],\"name\":\"deprecate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_spender\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"deprecated\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_evilUser\",\"type\":\"address\"}],\"name\":\"addBlackList\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_from\",\"type\":\"address\"},{\"name\":\"_to\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"upgradedAddress\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"balances\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maximumFee\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_maker\",\"type\":\"address\"}],\"name\":\"getBlackListStatus\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"},{\"name\":\"\",\"type\":\"address\"}],\"name\":\"allowed\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"paused\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"who\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getOwner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"name\":\"\",\"type\":\"string\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_to\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newBasisPoints\",\"type\":\"uint256\"},{\"name\":\"newMaxFee\",\"type\":\"uint256\"}],\"name\":\"setParams\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"issue\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"redeem\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"_owner\",\"type\":\"address\"},{\"name\":\"_spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"name\":\"remaining\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"basisPointsRate\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"address\"}],\"name\":\"isBlackListed\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_clearedUser\",\"type\":\"address\"}],\"name\":\"removeBlackList\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"MAX_UINT\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_blackListedUser\",\"type\":\"address\"}],\"name\":\"destroyBlackFunds\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_initialSupply\",\"type\":\"uint256\"},{\"name\":\"_name\",\"type\":\"string\"},{\"name\":\"_symbol\",\"type\":\"string\"},{\"name\":\"_decimals\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Issue\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Redeem\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"Deprecate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"feeBasisPoints\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"maxFee\",\"type\":\"uint256\"}],\"name\":\"Params\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_blackListedUser\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_balance\",\"type\":\"uint256\"}],\"name\":\"DestroyedBlackFunds\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"AddedBlackList\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"RemovedBlackList\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"Pause\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"Unpause\",\"type\":\"event\"}]"
 
 // ERC20 is an auto generated Go binding around an Ethereum contract.
 type ERC20 struct {
@@ -98,7 +91,7 @@ type ERC20TransactorRaw struct {
 }
 
 // NewERC20 creates a new instance of ERC20, bound to a specific deployed contract.
-func NewERC20(address common.Address, backend bind.ContractBackend) (*ERC20, error) {
+func NewERC20(address libcommon.Address, backend bind.ContractBackend) (*ERC20, error) {
 	contract, err := bindERC20(address, backend, backend, backend)
 	if err != nil {
 		return nil, err
@@ -107,7 +100,7 @@ func NewERC20(address common.Address, backend bind.ContractBackend) (*ERC20, err
 }
 
 // NewERC20Caller creates a new read-only instance of ERC20, bound to a specific deployed contract.
-func NewERC20Caller(address common.Address, caller bind.ContractCaller) (*ERC20Caller, error) {
+func NewERC20Caller(address libcommon.Address, caller bind.ContractCaller) (*ERC20Caller, error) {
 	contract, err := bindERC20(address, caller, nil, nil)
 	if err != nil {
 		return nil, err
@@ -116,7 +109,7 @@ func NewERC20Caller(address common.Address, caller bind.ContractCaller) (*ERC20C
 }
 
 // NewERC20Transactor creates a new write-only instance of ERC20, bound to a specific deployed contract.
-func NewERC20Transactor(address common.Address, transactor bind.ContractTransactor) (*ERC20Transactor, error) {
+func NewERC20Transactor(address libcommon.Address, transactor bind.ContractTransactor) (*ERC20Transactor, error) {
 	contract, err := bindERC20(address, nil, transactor, nil)
 	if err != nil {
 		return nil, err
@@ -125,7 +118,7 @@ func NewERC20Transactor(address common.Address, transactor bind.ContractTransact
 }
 
 // NewERC20Filterer creates a new log filterer instance of ERC20, bound to a specific deployed contract.
-func NewERC20Filterer(address common.Address, filterer bind.ContractFilterer) (*ERC20Filterer, error) {
+func NewERC20Filterer(address libcommon.Address, filterer bind.ContractFilterer) (*ERC20Filterer, error) {
 	contract, err := bindERC20(address, nil, nil, filterer)
 	if err != nil {
 		return nil, err
@@ -134,12 +127,12 @@ func NewERC20Filterer(address common.Address, filterer bind.ContractFilterer) (*
 }
 
 // bindERC20 binds a generic wrapper to an already deployed contract.
-func bindERC20(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := ERC20MetaData.GetAbi()
+func bindERC20(address libcommon.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := abi.JSON(strings.NewReader(ERC20ABI))
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
+	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and
@@ -152,12 +145,12 @@ func (_ERC20 *ERC20Raw) Call(opts *bind.CallOpts, result *[]interface{}, method 
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_ERC20 *ERC20Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+func (_ERC20 *ERC20Raw) Transfer(opts *bind.TransactOpts) (types.Transaction, error) {
 	return _ERC20.Contract.ERC20Transactor.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_ERC20 *ERC20Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_ERC20 *ERC20Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (types.Transaction, error) {
 	return _ERC20.Contract.ERC20Transactor.contract.Transact(opts, method, params...)
 }
 
@@ -171,12 +164,12 @@ func (_ERC20 *ERC20CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, m
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_ERC20 *ERC20TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorRaw) Transfer(opts *bind.TransactOpts) (types.Transaction, error) {
 	return _ERC20.Contract.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_ERC20 *ERC20TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (types.Transaction, error) {
 	return _ERC20.Contract.contract.Transact(opts, method, params...)
 }
 
@@ -214,7 +207,7 @@ func (_ERC20 *ERC20CallerSession) MAXUINT() (*big.Int, error) {
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
 // Solidity: function allowance(address _owner, address _spender) view returns(uint256 remaining)
-func (_ERC20 *ERC20Caller) Allowance(opts *bind.CallOpts, _owner common.Address, _spender common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20Caller) Allowance(opts *bind.CallOpts, _owner libcommon.Address, _spender libcommon.Address) (*big.Int, error) {
 	var out []interface{}
 	err := _ERC20.contract.Call(opts, &out, "allowance", _owner, _spender)
 
@@ -231,21 +224,21 @@ func (_ERC20 *ERC20Caller) Allowance(opts *bind.CallOpts, _owner common.Address,
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
 // Solidity: function allowance(address _owner, address _spender) view returns(uint256 remaining)
-func (_ERC20 *ERC20Session) Allowance(_owner common.Address, _spender common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20Session) Allowance(_owner libcommon.Address, _spender libcommon.Address) (*big.Int, error) {
 	return _ERC20.Contract.Allowance(&_ERC20.CallOpts, _owner, _spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
 // Solidity: function allowance(address _owner, address _spender) view returns(uint256 remaining)
-func (_ERC20 *ERC20CallerSession) Allowance(_owner common.Address, _spender common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20CallerSession) Allowance(_owner libcommon.Address, _spender libcommon.Address) (*big.Int, error) {
 	return _ERC20.Contract.Allowance(&_ERC20.CallOpts, _owner, _spender)
 }
 
 // Allowed is a free data retrieval call binding the contract method 0x5c658165.
 //
 // Solidity: function allowed(address , address ) view returns(uint256)
-func (_ERC20 *ERC20Caller) Allowed(opts *bind.CallOpts, arg0 common.Address, arg1 common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20Caller) Allowed(opts *bind.CallOpts, arg0 libcommon.Address, arg1 libcommon.Address) (*big.Int, error) {
 	var out []interface{}
 	err := _ERC20.contract.Call(opts, &out, "allowed", arg0, arg1)
 
@@ -262,21 +255,21 @@ func (_ERC20 *ERC20Caller) Allowed(opts *bind.CallOpts, arg0 common.Address, arg
 // Allowed is a free data retrieval call binding the contract method 0x5c658165.
 //
 // Solidity: function allowed(address , address ) view returns(uint256)
-func (_ERC20 *ERC20Session) Allowed(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20Session) Allowed(arg0 libcommon.Address, arg1 libcommon.Address) (*big.Int, error) {
 	return _ERC20.Contract.Allowed(&_ERC20.CallOpts, arg0, arg1)
 }
 
 // Allowed is a free data retrieval call binding the contract method 0x5c658165.
 //
 // Solidity: function allowed(address , address ) view returns(uint256)
-func (_ERC20 *ERC20CallerSession) Allowed(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20CallerSession) Allowed(arg0 libcommon.Address, arg1 libcommon.Address) (*big.Int, error) {
 	return _ERC20.Contract.Allowed(&_ERC20.CallOpts, arg0, arg1)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address who) view returns(uint256)
-func (_ERC20 *ERC20Caller) BalanceOf(opts *bind.CallOpts, who common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20Caller) BalanceOf(opts *bind.CallOpts, who libcommon.Address) (*big.Int, error) {
 	var out []interface{}
 	err := _ERC20.contract.Call(opts, &out, "balanceOf", who)
 
@@ -293,21 +286,21 @@ func (_ERC20 *ERC20Caller) BalanceOf(opts *bind.CallOpts, who common.Address) (*
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address who) view returns(uint256)
-func (_ERC20 *ERC20Session) BalanceOf(who common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20Session) BalanceOf(who libcommon.Address) (*big.Int, error) {
 	return _ERC20.Contract.BalanceOf(&_ERC20.CallOpts, who)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
 // Solidity: function balanceOf(address who) view returns(uint256)
-func (_ERC20 *ERC20CallerSession) BalanceOf(who common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20CallerSession) BalanceOf(who libcommon.Address) (*big.Int, error) {
 	return _ERC20.Contract.BalanceOf(&_ERC20.CallOpts, who)
 }
 
 // Balances is a free data retrieval call binding the contract method 0x27e235e3.
 //
 // Solidity: function balances(address ) view returns(uint256)
-func (_ERC20 *ERC20Caller) Balances(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20Caller) Balances(opts *bind.CallOpts, arg0 libcommon.Address) (*big.Int, error) {
 	var out []interface{}
 	err := _ERC20.contract.Call(opts, &out, "balances", arg0)
 
@@ -324,14 +317,14 @@ func (_ERC20 *ERC20Caller) Balances(opts *bind.CallOpts, arg0 common.Address) (*
 // Balances is a free data retrieval call binding the contract method 0x27e235e3.
 //
 // Solidity: function balances(address ) view returns(uint256)
-func (_ERC20 *ERC20Session) Balances(arg0 common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20Session) Balances(arg0 libcommon.Address) (*big.Int, error) {
 	return _ERC20.Contract.Balances(&_ERC20.CallOpts, arg0)
 }
 
 // Balances is a free data retrieval call binding the contract method 0x27e235e3.
 //
 // Solidity: function balances(address ) view returns(uint256)
-func (_ERC20 *ERC20CallerSession) Balances(arg0 common.Address) (*big.Int, error) {
+func (_ERC20 *ERC20CallerSession) Balances(arg0 libcommon.Address) (*big.Int, error) {
 	return _ERC20.Contract.Balances(&_ERC20.CallOpts, arg0)
 }
 
@@ -431,7 +424,7 @@ func (_ERC20 *ERC20CallerSession) Deprecated() (bool, error) {
 // GetBlackListStatus is a free data retrieval call binding the contract method 0x59bf1abe.
 //
 // Solidity: function getBlackListStatus(address _maker) view returns(bool)
-func (_ERC20 *ERC20Caller) GetBlackListStatus(opts *bind.CallOpts, _maker common.Address) (bool, error) {
+func (_ERC20 *ERC20Caller) GetBlackListStatus(opts *bind.CallOpts, _maker libcommon.Address) (bool, error) {
 	var out []interface{}
 	err := _ERC20.contract.Call(opts, &out, "getBlackListStatus", _maker)
 
@@ -448,29 +441,29 @@ func (_ERC20 *ERC20Caller) GetBlackListStatus(opts *bind.CallOpts, _maker common
 // GetBlackListStatus is a free data retrieval call binding the contract method 0x59bf1abe.
 //
 // Solidity: function getBlackListStatus(address _maker) view returns(bool)
-func (_ERC20 *ERC20Session) GetBlackListStatus(_maker common.Address) (bool, error) {
+func (_ERC20 *ERC20Session) GetBlackListStatus(_maker libcommon.Address) (bool, error) {
 	return _ERC20.Contract.GetBlackListStatus(&_ERC20.CallOpts, _maker)
 }
 
 // GetBlackListStatus is a free data retrieval call binding the contract method 0x59bf1abe.
 //
 // Solidity: function getBlackListStatus(address _maker) view returns(bool)
-func (_ERC20 *ERC20CallerSession) GetBlackListStatus(_maker common.Address) (bool, error) {
+func (_ERC20 *ERC20CallerSession) GetBlackListStatus(_maker libcommon.Address) (bool, error) {
 	return _ERC20.Contract.GetBlackListStatus(&_ERC20.CallOpts, _maker)
 }
 
 // GetOwner is a free data retrieval call binding the contract method 0x893d20e8.
 //
 // Solidity: function getOwner() view returns(address)
-func (_ERC20 *ERC20Caller) GetOwner(opts *bind.CallOpts) (common.Address, error) {
+func (_ERC20 *ERC20Caller) GetOwner(opts *bind.CallOpts) (libcommon.Address, error) {
 	var out []interface{}
 	err := _ERC20.contract.Call(opts, &out, "getOwner")
 
 	if err != nil {
-		return *new(common.Address), err
+		return *new(libcommon.Address), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
 
 	return out0, err
 
@@ -479,21 +472,21 @@ func (_ERC20 *ERC20Caller) GetOwner(opts *bind.CallOpts) (common.Address, error)
 // GetOwner is a free data retrieval call binding the contract method 0x893d20e8.
 //
 // Solidity: function getOwner() view returns(address)
-func (_ERC20 *ERC20Session) GetOwner() (common.Address, error) {
+func (_ERC20 *ERC20Session) GetOwner() (libcommon.Address, error) {
 	return _ERC20.Contract.GetOwner(&_ERC20.CallOpts)
 }
 
 // GetOwner is a free data retrieval call binding the contract method 0x893d20e8.
 //
 // Solidity: function getOwner() view returns(address)
-func (_ERC20 *ERC20CallerSession) GetOwner() (common.Address, error) {
+func (_ERC20 *ERC20CallerSession) GetOwner() (libcommon.Address, error) {
 	return _ERC20.Contract.GetOwner(&_ERC20.CallOpts)
 }
 
 // IsBlackListed is a free data retrieval call binding the contract method 0xe47d6060.
 //
 // Solidity: function isBlackListed(address ) view returns(bool)
-func (_ERC20 *ERC20Caller) IsBlackListed(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
+func (_ERC20 *ERC20Caller) IsBlackListed(opts *bind.CallOpts, arg0 libcommon.Address) (bool, error) {
 	var out []interface{}
 	err := _ERC20.contract.Call(opts, &out, "isBlackListed", arg0)
 
@@ -510,14 +503,14 @@ func (_ERC20 *ERC20Caller) IsBlackListed(opts *bind.CallOpts, arg0 common.Addres
 // IsBlackListed is a free data retrieval call binding the contract method 0xe47d6060.
 //
 // Solidity: function isBlackListed(address ) view returns(bool)
-func (_ERC20 *ERC20Session) IsBlackListed(arg0 common.Address) (bool, error) {
+func (_ERC20 *ERC20Session) IsBlackListed(arg0 libcommon.Address) (bool, error) {
 	return _ERC20.Contract.IsBlackListed(&_ERC20.CallOpts, arg0)
 }
 
 // IsBlackListed is a free data retrieval call binding the contract method 0xe47d6060.
 //
 // Solidity: function isBlackListed(address ) view returns(bool)
-func (_ERC20 *ERC20CallerSession) IsBlackListed(arg0 common.Address) (bool, error) {
+func (_ERC20 *ERC20CallerSession) IsBlackListed(arg0 libcommon.Address) (bool, error) {
 	return _ERC20.Contract.IsBlackListed(&_ERC20.CallOpts, arg0)
 }
 
@@ -586,15 +579,15 @@ func (_ERC20 *ERC20CallerSession) Name() (string, error) {
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
-func (_ERC20 *ERC20Caller) Owner(opts *bind.CallOpts) (common.Address, error) {
+func (_ERC20 *ERC20Caller) Owner(opts *bind.CallOpts) (libcommon.Address, error) {
 	var out []interface{}
 	err := _ERC20.contract.Call(opts, &out, "owner")
 
 	if err != nil {
-		return *new(common.Address), err
+		return *new(libcommon.Address), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
 
 	return out0, err
 
@@ -603,14 +596,14 @@ func (_ERC20 *ERC20Caller) Owner(opts *bind.CallOpts) (common.Address, error) {
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
-func (_ERC20 *ERC20Session) Owner() (common.Address, error) {
+func (_ERC20 *ERC20Session) Owner() (libcommon.Address, error) {
 	return _ERC20.Contract.Owner(&_ERC20.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
-func (_ERC20 *ERC20CallerSession) Owner() (common.Address, error) {
+func (_ERC20 *ERC20CallerSession) Owner() (libcommon.Address, error) {
 	return _ERC20.Contract.Owner(&_ERC20.CallOpts)
 }
 
@@ -710,15 +703,15 @@ func (_ERC20 *ERC20CallerSession) TotalSupply() (*big.Int, error) {
 // UpgradedAddress is a free data retrieval call binding the contract method 0x26976e3f.
 //
 // Solidity: function upgradedAddress() view returns(address)
-func (_ERC20 *ERC20Caller) UpgradedAddress(opts *bind.CallOpts) (common.Address, error) {
+func (_ERC20 *ERC20Caller) UpgradedAddress(opts *bind.CallOpts) (libcommon.Address, error) {
 	var out []interface{}
 	err := _ERC20.contract.Call(opts, &out, "upgradedAddress")
 
 	if err != nil {
-		return *new(common.Address), err
+		return *new(libcommon.Address), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
 
 	return out0, err
 
@@ -727,288 +720,705 @@ func (_ERC20 *ERC20Caller) UpgradedAddress(opts *bind.CallOpts) (common.Address,
 // UpgradedAddress is a free data retrieval call binding the contract method 0x26976e3f.
 //
 // Solidity: function upgradedAddress() view returns(address)
-func (_ERC20 *ERC20Session) UpgradedAddress() (common.Address, error) {
+func (_ERC20 *ERC20Session) UpgradedAddress() (libcommon.Address, error) {
 	return _ERC20.Contract.UpgradedAddress(&_ERC20.CallOpts)
 }
 
 // UpgradedAddress is a free data retrieval call binding the contract method 0x26976e3f.
 //
 // Solidity: function upgradedAddress() view returns(address)
-func (_ERC20 *ERC20CallerSession) UpgradedAddress() (common.Address, error) {
+func (_ERC20 *ERC20CallerSession) UpgradedAddress() (libcommon.Address, error) {
 	return _ERC20.Contract.UpgradedAddress(&_ERC20.CallOpts)
 }
 
 // AddBlackList is a paid mutator transaction binding the contract method 0x0ecb93c0.
 //
 // Solidity: function addBlackList(address _evilUser) returns()
-func (_ERC20 *ERC20Transactor) AddBlackList(opts *bind.TransactOpts, _evilUser common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) AddBlackList(opts *bind.TransactOpts, _evilUser libcommon.Address) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "addBlackList", _evilUser)
 }
 
 // AddBlackList is a paid mutator transaction binding the contract method 0x0ecb93c0.
 //
 // Solidity: function addBlackList(address _evilUser) returns()
-func (_ERC20 *ERC20Session) AddBlackList(_evilUser common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) AddBlackList(_evilUser libcommon.Address) (types.Transaction, error) {
 	return _ERC20.Contract.AddBlackList(&_ERC20.TransactOpts, _evilUser)
 }
 
 // AddBlackList is a paid mutator transaction binding the contract method 0x0ecb93c0.
 //
 // Solidity: function addBlackList(address _evilUser) returns()
-func (_ERC20 *ERC20TransactorSession) AddBlackList(_evilUser common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) AddBlackList(_evilUser libcommon.Address) (types.Transaction, error) {
 	return _ERC20.Contract.AddBlackList(&_ERC20.TransactOpts, _evilUser)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address _spender, uint256 _value) returns()
-func (_ERC20 *ERC20Transactor) Approve(opts *bind.TransactOpts, _spender common.Address, _value *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) Approve(opts *bind.TransactOpts, _spender libcommon.Address, _value *big.Int) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "approve", _spender, _value)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address _spender, uint256 _value) returns()
-func (_ERC20 *ERC20Session) Approve(_spender common.Address, _value *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) Approve(_spender libcommon.Address, _value *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.Approve(&_ERC20.TransactOpts, _spender, _value)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
 //
 // Solidity: function approve(address _spender, uint256 _value) returns()
-func (_ERC20 *ERC20TransactorSession) Approve(_spender common.Address, _value *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) Approve(_spender libcommon.Address, _value *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.Approve(&_ERC20.TransactOpts, _spender, _value)
 }
 
 // Deprecate is a paid mutator transaction binding the contract method 0x0753c30c.
 //
 // Solidity: function deprecate(address _upgradedAddress) returns()
-func (_ERC20 *ERC20Transactor) Deprecate(opts *bind.TransactOpts, _upgradedAddress common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) Deprecate(opts *bind.TransactOpts, _upgradedAddress libcommon.Address) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "deprecate", _upgradedAddress)
 }
 
 // Deprecate is a paid mutator transaction binding the contract method 0x0753c30c.
 //
 // Solidity: function deprecate(address _upgradedAddress) returns()
-func (_ERC20 *ERC20Session) Deprecate(_upgradedAddress common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) Deprecate(_upgradedAddress libcommon.Address) (types.Transaction, error) {
 	return _ERC20.Contract.Deprecate(&_ERC20.TransactOpts, _upgradedAddress)
 }
 
 // Deprecate is a paid mutator transaction binding the contract method 0x0753c30c.
 //
 // Solidity: function deprecate(address _upgradedAddress) returns()
-func (_ERC20 *ERC20TransactorSession) Deprecate(_upgradedAddress common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) Deprecate(_upgradedAddress libcommon.Address) (types.Transaction, error) {
 	return _ERC20.Contract.Deprecate(&_ERC20.TransactOpts, _upgradedAddress)
 }
 
 // DestroyBlackFunds is a paid mutator transaction binding the contract method 0xf3bdc228.
 //
 // Solidity: function destroyBlackFunds(address _blackListedUser) returns()
-func (_ERC20 *ERC20Transactor) DestroyBlackFunds(opts *bind.TransactOpts, _blackListedUser common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) DestroyBlackFunds(opts *bind.TransactOpts, _blackListedUser libcommon.Address) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "destroyBlackFunds", _blackListedUser)
 }
 
 // DestroyBlackFunds is a paid mutator transaction binding the contract method 0xf3bdc228.
 //
 // Solidity: function destroyBlackFunds(address _blackListedUser) returns()
-func (_ERC20 *ERC20Session) DestroyBlackFunds(_blackListedUser common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) DestroyBlackFunds(_blackListedUser libcommon.Address) (types.Transaction, error) {
 	return _ERC20.Contract.DestroyBlackFunds(&_ERC20.TransactOpts, _blackListedUser)
 }
 
 // DestroyBlackFunds is a paid mutator transaction binding the contract method 0xf3bdc228.
 //
 // Solidity: function destroyBlackFunds(address _blackListedUser) returns()
-func (_ERC20 *ERC20TransactorSession) DestroyBlackFunds(_blackListedUser common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) DestroyBlackFunds(_blackListedUser libcommon.Address) (types.Transaction, error) {
 	return _ERC20.Contract.DestroyBlackFunds(&_ERC20.TransactOpts, _blackListedUser)
 }
 
 // Issue is a paid mutator transaction binding the contract method 0xcc872b66.
 //
 // Solidity: function issue(uint256 amount) returns()
-func (_ERC20 *ERC20Transactor) Issue(opts *bind.TransactOpts, amount *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) Issue(opts *bind.TransactOpts, amount *big.Int) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "issue", amount)
 }
 
 // Issue is a paid mutator transaction binding the contract method 0xcc872b66.
 //
 // Solidity: function issue(uint256 amount) returns()
-func (_ERC20 *ERC20Session) Issue(amount *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) Issue(amount *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.Issue(&_ERC20.TransactOpts, amount)
 }
 
 // Issue is a paid mutator transaction binding the contract method 0xcc872b66.
 //
 // Solidity: function issue(uint256 amount) returns()
-func (_ERC20 *ERC20TransactorSession) Issue(amount *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) Issue(amount *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.Issue(&_ERC20.TransactOpts, amount)
 }
 
 // Pause is a paid mutator transaction binding the contract method 0x8456cb59.
 //
 // Solidity: function pause() returns()
-func (_ERC20 *ERC20Transactor) Pause(opts *bind.TransactOpts) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) Pause(opts *bind.TransactOpts) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "pause")
 }
 
 // Pause is a paid mutator transaction binding the contract method 0x8456cb59.
 //
 // Solidity: function pause() returns()
-func (_ERC20 *ERC20Session) Pause() (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) Pause() (types.Transaction, error) {
 	return _ERC20.Contract.Pause(&_ERC20.TransactOpts)
 }
 
 // Pause is a paid mutator transaction binding the contract method 0x8456cb59.
 //
 // Solidity: function pause() returns()
-func (_ERC20 *ERC20TransactorSession) Pause() (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) Pause() (types.Transaction, error) {
 	return _ERC20.Contract.Pause(&_ERC20.TransactOpts)
 }
 
 // Redeem is a paid mutator transaction binding the contract method 0xdb006a75.
 //
 // Solidity: function redeem(uint256 amount) returns()
-func (_ERC20 *ERC20Transactor) Redeem(opts *bind.TransactOpts, amount *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) Redeem(opts *bind.TransactOpts, amount *big.Int) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "redeem", amount)
 }
 
 // Redeem is a paid mutator transaction binding the contract method 0xdb006a75.
 //
 // Solidity: function redeem(uint256 amount) returns()
-func (_ERC20 *ERC20Session) Redeem(amount *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) Redeem(amount *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.Redeem(&_ERC20.TransactOpts, amount)
 }
 
 // Redeem is a paid mutator transaction binding the contract method 0xdb006a75.
 //
 // Solidity: function redeem(uint256 amount) returns()
-func (_ERC20 *ERC20TransactorSession) Redeem(amount *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) Redeem(amount *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.Redeem(&_ERC20.TransactOpts, amount)
 }
 
 // RemoveBlackList is a paid mutator transaction binding the contract method 0xe4997dc5.
 //
 // Solidity: function removeBlackList(address _clearedUser) returns()
-func (_ERC20 *ERC20Transactor) RemoveBlackList(opts *bind.TransactOpts, _clearedUser common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) RemoveBlackList(opts *bind.TransactOpts, _clearedUser libcommon.Address) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "removeBlackList", _clearedUser)
 }
 
 // RemoveBlackList is a paid mutator transaction binding the contract method 0xe4997dc5.
 //
 // Solidity: function removeBlackList(address _clearedUser) returns()
-func (_ERC20 *ERC20Session) RemoveBlackList(_clearedUser common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) RemoveBlackList(_clearedUser libcommon.Address) (types.Transaction, error) {
 	return _ERC20.Contract.RemoveBlackList(&_ERC20.TransactOpts, _clearedUser)
 }
 
 // RemoveBlackList is a paid mutator transaction binding the contract method 0xe4997dc5.
 //
 // Solidity: function removeBlackList(address _clearedUser) returns()
-func (_ERC20 *ERC20TransactorSession) RemoveBlackList(_clearedUser common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) RemoveBlackList(_clearedUser libcommon.Address) (types.Transaction, error) {
 	return _ERC20.Contract.RemoveBlackList(&_ERC20.TransactOpts, _clearedUser)
 }
 
 // SetParams is a paid mutator transaction binding the contract method 0xc0324c77.
 //
 // Solidity: function setParams(uint256 newBasisPoints, uint256 newMaxFee) returns()
-func (_ERC20 *ERC20Transactor) SetParams(opts *bind.TransactOpts, newBasisPoints *big.Int, newMaxFee *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) SetParams(opts *bind.TransactOpts, newBasisPoints *big.Int, newMaxFee *big.Int) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "setParams", newBasisPoints, newMaxFee)
 }
 
 // SetParams is a paid mutator transaction binding the contract method 0xc0324c77.
 //
 // Solidity: function setParams(uint256 newBasisPoints, uint256 newMaxFee) returns()
-func (_ERC20 *ERC20Session) SetParams(newBasisPoints *big.Int, newMaxFee *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) SetParams(newBasisPoints *big.Int, newMaxFee *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.SetParams(&_ERC20.TransactOpts, newBasisPoints, newMaxFee)
 }
 
 // SetParams is a paid mutator transaction binding the contract method 0xc0324c77.
 //
 // Solidity: function setParams(uint256 newBasisPoints, uint256 newMaxFee) returns()
-func (_ERC20 *ERC20TransactorSession) SetParams(newBasisPoints *big.Int, newMaxFee *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) SetParams(newBasisPoints *big.Int, newMaxFee *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.SetParams(&_ERC20.TransactOpts, newBasisPoints, newMaxFee)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
 // Solidity: function transfer(address _to, uint256 _value) returns()
-func (_ERC20 *ERC20Transactor) Transfer(opts *bind.TransactOpts, _to common.Address, _value *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) Transfer(opts *bind.TransactOpts, _to libcommon.Address, _value *big.Int) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "transfer", _to, _value)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
 // Solidity: function transfer(address _to, uint256 _value) returns()
-func (_ERC20 *ERC20Session) Transfer(_to common.Address, _value *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) Transfer(_to libcommon.Address, _value *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.Transfer(&_ERC20.TransactOpts, _to, _value)
 }
 
 // Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
 //
 // Solidity: function transfer(address _to, uint256 _value) returns()
-func (_ERC20 *ERC20TransactorSession) Transfer(_to common.Address, _value *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) Transfer(_to libcommon.Address, _value *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.Transfer(&_ERC20.TransactOpts, _to, _value)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address _from, address _to, uint256 _value) returns()
-func (_ERC20 *ERC20Transactor) TransferFrom(opts *bind.TransactOpts, _from common.Address, _to common.Address, _value *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) TransferFrom(opts *bind.TransactOpts, _from libcommon.Address, _to libcommon.Address, _value *big.Int) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "transferFrom", _from, _to, _value)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address _from, address _to, uint256 _value) returns()
-func (_ERC20 *ERC20Session) TransferFrom(_from common.Address, _to common.Address, _value *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) TransferFrom(_from libcommon.Address, _to libcommon.Address, _value *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.TransferFrom(&_ERC20.TransactOpts, _from, _to, _value)
 }
 
 // TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
 //
 // Solidity: function transferFrom(address _from, address _to, uint256 _value) returns()
-func (_ERC20 *ERC20TransactorSession) TransferFrom(_from common.Address, _to common.Address, _value *big.Int) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) TransferFrom(_from libcommon.Address, _to libcommon.Address, _value *big.Int) (types.Transaction, error) {
 	return _ERC20.Contract.TransferFrom(&_ERC20.TransactOpts, _from, _to, _value)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
-func (_ERC20 *ERC20Transactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) TransferOwnership(opts *bind.TransactOpts, newOwner libcommon.Address) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "transferOwnership", newOwner)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
-func (_ERC20 *ERC20Session) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) TransferOwnership(newOwner libcommon.Address) (types.Transaction, error) {
 	return _ERC20.Contract.TransferOwnership(&_ERC20.TransactOpts, newOwner)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
-func (_ERC20 *ERC20TransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) TransferOwnership(newOwner libcommon.Address) (types.Transaction, error) {
 	return _ERC20.Contract.TransferOwnership(&_ERC20.TransactOpts, newOwner)
 }
 
 // Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
 //
 // Solidity: function unpause() returns()
-func (_ERC20 *ERC20Transactor) Unpause(opts *bind.TransactOpts) (*types.Transaction, error) {
+func (_ERC20 *ERC20Transactor) Unpause(opts *bind.TransactOpts) (types.Transaction, error) {
 	return _ERC20.contract.Transact(opts, "unpause")
 }
 
 // Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
 //
 // Solidity: function unpause() returns()
-func (_ERC20 *ERC20Session) Unpause() (*types.Transaction, error) {
+func (_ERC20 *ERC20Session) Unpause() (types.Transaction, error) {
 	return _ERC20.Contract.Unpause(&_ERC20.TransactOpts)
 }
 
 // Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
 //
 // Solidity: function unpause() returns()
-func (_ERC20 *ERC20TransactorSession) Unpause() (*types.Transaction, error) {
+func (_ERC20 *ERC20TransactorSession) Unpause() (types.Transaction, error) {
 	return _ERC20.Contract.Unpause(&_ERC20.TransactOpts)
+}
+
+// AddBlackListParams is an auto generated read-only Go binding of transcaction calldata params
+type AddBlackListParams struct {
+	Param__evilUser libcommon.Address
+}
+
+// Parse AddBlackList method from calldata of a transaction
+//
+// Solidity: function addBlackList(address _evilUser) returns()
+func ParseAddBlackList(calldata []byte) (*AddBlackListParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["addBlackList"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack addBlackList params data: %w", err)
+	}
+
+	var paramsResult = new(AddBlackListParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
+
+	return &AddBlackListParams{
+		Param__evilUser: out0,
+	}, nil
+}
+
+// ApproveParams is an auto generated read-only Go binding of transcaction calldata params
+type ApproveParams struct {
+	Param__spender libcommon.Address
+	Param__value   *big.Int
+}
+
+// Parse Approve method from calldata of a transaction
+//
+// Solidity: function approve(address _spender, uint256 _value) returns()
+func ParseApprove(calldata []byte) (*ApproveParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["approve"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack approve params data: %w", err)
+	}
+
+	var paramsResult = new(ApproveParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
+	out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return &ApproveParams{
+		Param__spender: out0, Param__value: out1,
+	}, nil
+}
+
+// DeprecateParams is an auto generated read-only Go binding of transcaction calldata params
+type DeprecateParams struct {
+	Param__upgradedAddress libcommon.Address
+}
+
+// Parse Deprecate method from calldata of a transaction
+//
+// Solidity: function deprecate(address _upgradedAddress) returns()
+func ParseDeprecate(calldata []byte) (*DeprecateParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["deprecate"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack deprecate params data: %w", err)
+	}
+
+	var paramsResult = new(DeprecateParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
+
+	return &DeprecateParams{
+		Param__upgradedAddress: out0,
+	}, nil
+}
+
+// DestroyBlackFundsParams is an auto generated read-only Go binding of transcaction calldata params
+type DestroyBlackFundsParams struct {
+	Param__blackListedUser libcommon.Address
+}
+
+// Parse DestroyBlackFunds method from calldata of a transaction
+//
+// Solidity: function destroyBlackFunds(address _blackListedUser) returns()
+func ParseDestroyBlackFunds(calldata []byte) (*DestroyBlackFundsParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["destroyBlackFunds"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack destroyBlackFunds params data: %w", err)
+	}
+
+	var paramsResult = new(DestroyBlackFundsParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
+
+	return &DestroyBlackFundsParams{
+		Param__blackListedUser: out0,
+	}, nil
+}
+
+// IssueParams is an auto generated read-only Go binding of transcaction calldata params
+type IssueParams struct {
+	Param_amount *big.Int
+}
+
+// Parse Issue method from calldata of a transaction
+//
+// Solidity: function issue(uint256 amount) returns()
+func ParseIssue(calldata []byte) (*IssueParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["issue"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack issue params data: %w", err)
+	}
+
+	var paramsResult = new(IssueParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return &IssueParams{
+		Param_amount: out0,
+	}, nil
+}
+
+// RedeemParams is an auto generated read-only Go binding of transcaction calldata params
+type RedeemParams struct {
+	Param_amount *big.Int
+}
+
+// Parse Redeem method from calldata of a transaction
+//
+// Solidity: function redeem(uint256 amount) returns()
+func ParseRedeem(calldata []byte) (*RedeemParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["redeem"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack redeem params data: %w", err)
+	}
+
+	var paramsResult = new(RedeemParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return &RedeemParams{
+		Param_amount: out0,
+	}, nil
+}
+
+// RemoveBlackListParams is an auto generated read-only Go binding of transcaction calldata params
+type RemoveBlackListParams struct {
+	Param__clearedUser libcommon.Address
+}
+
+// Parse RemoveBlackList method from calldata of a transaction
+//
+// Solidity: function removeBlackList(address _clearedUser) returns()
+func ParseRemoveBlackList(calldata []byte) (*RemoveBlackListParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["removeBlackList"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack removeBlackList params data: %w", err)
+	}
+
+	var paramsResult = new(RemoveBlackListParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
+
+	return &RemoveBlackListParams{
+		Param__clearedUser: out0,
+	}, nil
+}
+
+// SetParamsParams is an auto generated read-only Go binding of transcaction calldata params
+type SetParamsParams struct {
+	Param_newBasisPoints *big.Int
+	Param_newMaxFee      *big.Int
+}
+
+// Parse SetParams method from calldata of a transaction
+//
+// Solidity: function setParams(uint256 newBasisPoints, uint256 newMaxFee) returns()
+func ParseSetParams(calldata []byte) (*SetParamsParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["setParams"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack setParams params data: %w", err)
+	}
+
+	var paramsResult = new(SetParamsParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return &SetParamsParams{
+		Param_newBasisPoints: out0, Param_newMaxFee: out1,
+	}, nil
+}
+
+// TransferParams is an auto generated read-only Go binding of transcaction calldata params
+type TransferParams struct {
+	Param__to    libcommon.Address
+	Param__value *big.Int
+}
+
+// Parse Transfer method from calldata of a transaction
+//
+// Solidity: function transfer(address _to, uint256 _value) returns()
+func ParseTransfer(calldata []byte) (*TransferParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["transfer"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack transfer params data: %w", err)
+	}
+
+	var paramsResult = new(TransferParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
+	out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return &TransferParams{
+		Param__to: out0, Param__value: out1,
+	}, nil
+}
+
+// TransferFromParams is an auto generated read-only Go binding of transcaction calldata params
+type TransferFromParams struct {
+	Param__from  libcommon.Address
+	Param__to    libcommon.Address
+	Param__value *big.Int
+}
+
+// Parse TransferFrom method from calldata of a transaction
+//
+// Solidity: function transferFrom(address _from, address _to, uint256 _value) returns()
+func ParseTransferFrom(calldata []byte) (*TransferFromParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["transferFrom"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack transferFrom params data: %w", err)
+	}
+
+	var paramsResult = new(TransferFromParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
+	out1 := *abi.ConvertType(out[1], new(libcommon.Address)).(*libcommon.Address)
+	out2 := *abi.ConvertType(out[2], new(*big.Int)).(**big.Int)
+
+	return &TransferFromParams{
+		Param__from: out0, Param__to: out1, Param__value: out2,
+	}, nil
+}
+
+// TransferOwnershipParams is an auto generated read-only Go binding of transcaction calldata params
+type TransferOwnershipParams struct {
+	Param_newOwner libcommon.Address
+}
+
+// Parse TransferOwnership method from calldata of a transaction
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func ParseTransferOwnership(calldata []byte) (*TransferOwnershipParams, error) {
+	if len(calldata) <= 4 {
+		return nil, fmt.Errorf("invalid calldata input")
+	}
+
+	_abi, err := abi.JSON(strings.NewReader(ERC20ABI))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get abi of registry metadata: %w", err)
+	}
+
+	out, err := _abi.Methods["transferOwnership"].Inputs.Unpack(calldata[4:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to unpack transferOwnership params data: %w", err)
+	}
+
+	var paramsResult = new(TransferOwnershipParams)
+	value := reflect.ValueOf(paramsResult).Elem()
+
+	if value.NumField() != len(out) {
+		return nil, fmt.Errorf("failed to match calldata with param field number")
+	}
+
+	out0 := *abi.ConvertType(out[0], new(libcommon.Address)).(*libcommon.Address)
+
+	return &TransferOwnershipParams{
+		Param_newOwner: out0,
+	}, nil
 }
 
 // ERC20AddedBlackListIterator is returned from FilterAddedBlackList and is used to iterate over the raw logs and unpacked data for AddedBlackList events raised by the ERC20 contract.
@@ -1080,7 +1490,7 @@ func (it *ERC20AddedBlackListIterator) Close() error {
 
 // ERC20AddedBlackList represents a AddedBlackList event raised by the ERC20 contract.
 type ERC20AddedBlackList struct {
-	User common.Address
+	User libcommon.Address
 	Raw  types.Log // Blockchain specific contextual infos
 }
 
@@ -1214,8 +1624,8 @@ func (it *ERC20ApprovalIterator) Close() error {
 
 // ERC20Approval represents a Approval event raised by the ERC20 contract.
 type ERC20Approval struct {
-	Owner   common.Address
-	Spender common.Address
+	Owner   libcommon.Address
+	Spender libcommon.Address
 	Value   *big.Int
 	Raw     types.Log // Blockchain specific contextual infos
 }
@@ -1223,7 +1633,7 @@ type ERC20Approval struct {
 // FilterApproval is a free log retrieval operation binding the contract event 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925.
 //
 // Solidity: event Approval(address indexed owner, address indexed spender, uint256 value)
-func (_ERC20 *ERC20Filterer) FilterApproval(opts *bind.FilterOpts, owner []common.Address, spender []common.Address) (*ERC20ApprovalIterator, error) {
+func (_ERC20 *ERC20Filterer) FilterApproval(opts *bind.FilterOpts, owner []libcommon.Address, spender []libcommon.Address) (*ERC20ApprovalIterator, error) {
 
 	var ownerRule []interface{}
 	for _, ownerItem := range owner {
@@ -1244,7 +1654,7 @@ func (_ERC20 *ERC20Filterer) FilterApproval(opts *bind.FilterOpts, owner []commo
 // WatchApproval is a free log subscription operation binding the contract event 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925.
 //
 // Solidity: event Approval(address indexed owner, address indexed spender, uint256 value)
-func (_ERC20 *ERC20Filterer) WatchApproval(opts *bind.WatchOpts, sink chan<- *ERC20Approval, owner []common.Address, spender []common.Address) (event.Subscription, error) {
+func (_ERC20 *ERC20Filterer) WatchApproval(opts *bind.WatchOpts, sink chan<- *ERC20Approval, owner []libcommon.Address, spender []libcommon.Address) (event.Subscription, error) {
 
 	var ownerRule []interface{}
 	for _, ownerItem := range owner {
@@ -1368,7 +1778,7 @@ func (it *ERC20DeprecateIterator) Close() error {
 
 // ERC20Deprecate represents a Deprecate event raised by the ERC20 contract.
 type ERC20Deprecate struct {
-	NewAddress common.Address
+	NewAddress libcommon.Address
 	Raw        types.Log // Blockchain specific contextual infos
 }
 
@@ -1502,7 +1912,7 @@ func (it *ERC20DestroyedBlackFundsIterator) Close() error {
 
 // ERC20DestroyedBlackFunds represents a DestroyedBlackFunds event raised by the ERC20 contract.
 type ERC20DestroyedBlackFunds struct {
-	BlackListedUser common.Address
+	BlackListedUser libcommon.Address
 	Balance         *big.Int
 	Raw             types.Log // Blockchain specific contextual infos
 }
@@ -2173,7 +2583,7 @@ func (it *ERC20RemovedBlackListIterator) Close() error {
 
 // ERC20RemovedBlackList represents a RemovedBlackList event raised by the ERC20 contract.
 type ERC20RemovedBlackList struct {
-	User common.Address
+	User libcommon.Address
 	Raw  types.Log // Blockchain specific contextual infos
 }
 
@@ -2307,8 +2717,8 @@ func (it *ERC20TransferIterator) Close() error {
 
 // ERC20Transfer represents a Transfer event raised by the ERC20 contract.
 type ERC20Transfer struct {
-	From  common.Address
-	To    common.Address
+	From  libcommon.Address
+	To    libcommon.Address
 	Value *big.Int
 	Raw   types.Log // Blockchain specific contextual infos
 }
@@ -2316,7 +2726,7 @@ type ERC20Transfer struct {
 // FilterTransfer is a free log retrieval operation binding the contract event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef.
 //
 // Solidity: event Transfer(address indexed from, address indexed to, uint256 value)
-func (_ERC20 *ERC20Filterer) FilterTransfer(opts *bind.FilterOpts, from []common.Address, to []common.Address) (*ERC20TransferIterator, error) {
+func (_ERC20 *ERC20Filterer) FilterTransfer(opts *bind.FilterOpts, from []libcommon.Address, to []libcommon.Address) (*ERC20TransferIterator, error) {
 
 	var fromRule []interface{}
 	for _, fromItem := range from {
@@ -2337,7 +2747,7 @@ func (_ERC20 *ERC20Filterer) FilterTransfer(opts *bind.FilterOpts, from []common
 // WatchTransfer is a free log subscription operation binding the contract event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef.
 //
 // Solidity: event Transfer(address indexed from, address indexed to, uint256 value)
-func (_ERC20 *ERC20Filterer) WatchTransfer(opts *bind.WatchOpts, sink chan<- *ERC20Transfer, from []common.Address, to []common.Address) (event.Subscription, error) {
+func (_ERC20 *ERC20Filterer) WatchTransfer(opts *bind.WatchOpts, sink chan<- *ERC20Transfer, from []libcommon.Address, to []libcommon.Address) (event.Subscription, error) {
 
 	var fromRule []interface{}
 	for _, fromItem := range from {
